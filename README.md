@@ -24,3 +24,4 @@
 ### [react](./react/)
 
 1. usePrevious
+2. simpleHooks
