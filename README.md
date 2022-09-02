@@ -13,3 +13,4 @@
 ### [promise](./promise/);
 
 1. 并发控制 batchControl
+2. 实现 allSet
