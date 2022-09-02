@@ -14,3 +14,4 @@
 
 1. 并发控制 batchControl
 2. 实现 allSet
+3. Promise 链式调用 linkCallPromise
