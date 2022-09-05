@@ -25,3 +25,5 @@
 
 1. usePrevious
 2. simpleHooks
+3. useIsMounted
+4. useDidUpdateEffect
