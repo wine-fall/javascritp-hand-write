@@ -88,8 +88,74 @@ const tasks = [
 //     schedule.add(() => mockAjax(...tasks[i]));
 // };
 
-control(tasks.map((input) => () => mockAjax(...input)), 2).then((res) => {
-    console.log(res);
-});
+// control(tasks.map((input) => () => mockAjax(...input)), 2).then((res) => {
+//     console.log(res);
+// });
+class RequestManager {
+
+    constructor(opt) {
+        this.opt = opt;
+        this.queue = [];
+        this.concurrentRequests = 0;
+        this.retryMap = new Map();
+    }
+  
+    enqueue([fn, res, rej, handleRetry]) {
+        this.queue.push([fn, res, rej, handleRetry]);
+        this.retryMap.set(fn, 0);
+        this.run();
+    }
+
+    run() {
+        const {maxConcurrentRequests, maxRetries} = this.opt;
+        if (this.concurrentRequests < maxConcurrentRequests && this.queue.length) {
+            this.concurrentRequests += 1;
+            const [fn, res, rej] = this.queue.shift();
+            fn().then((val) => {
+                res(val);
+            }).catch((err) => {
+                if (this.retryMap.get(fn) < maxRetries) {
+                    this.retryMap.set(fn, this.retryMap.get(fn) + 1);
+                    this.queue.push([fn, res, rej]);
+                    handleRetry(err);
+                }
+                rej(err);
+            }).finally(() => {
+                this.concurrentRequests -= 1;
+                this.run();
+            });
+        }
+    }
+}
+
+
+  
+async function main() {
+    const requestManager = new RequestManager({
+        maxConcurrentRequests: 2,
+        maxRetries: 3,
+    });
+    // 2, 1, 3, 4
+  
+    const requests = task.map(([timeout, val]) => mockAjax(timeout, val));
+    // 错误重试，以及每个 Promsie 的状态被外层处理
+    for (const request of requests) {
+        const res = (v) => {
+            console.log('Result is: ', v);
+        };
+        const rej = v => {
+            console.log('Error is: ', v);
+        };
+
+        const handleRetry = v => {
+            console.log('Retry is: ', v);
+        };
+        requestManager.enqueue([request, res, rej, handleRetry]);
+    }
+}
+
+main();
+  
+  
 
 // 2 1 3 4
