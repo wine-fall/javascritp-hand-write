@@ -33,7 +33,7 @@ class Schedule{
         if (this.list.length && this.cnt < this.maxNum){
             this.cnt++;
             const promise = this.list.shift();
-            promise().then(() => {
+            promise().finally(() => {
                 this.cnt--;
                 this.excute();
             });
@@ -64,10 +64,11 @@ const control = (promises, maxNum) => {
                 const fn = queue.shift();
                 fn().then((v) => {
                     ret.push(v);
-                    c--;
-                    run();
                 }).catch((err) => {
                     reject(err);
+                }).finally(() => {
+                    c--;
+                    run();
                 });
             }
         };
